@@ -11,7 +11,7 @@ elif
 fi
 
 # Detect active window and identify the browser
-xprop -root | grep '^_NET_ACTIVE_WINDOW' && {
+xprop -root | grep '^_NET_ACTIVE_WINDOW' >/dev/null 2>&1 && {
     winid=$(xprop -root _NET_ACTIVE_WINDOW | sed 's/.*[[:space:]]//')
     class=$(xprop -id "$winid" WM_CLASS | awk -F'\"' '{ print $(NF - 1) }')
     case "$class" in
