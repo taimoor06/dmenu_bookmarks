@@ -3,6 +3,13 @@
 # Default browser command
 browser_command="$BROWSER --new-window"
 
+if [ "$1" = "-r" ]; then
+	selection="rofi -dmenu"
+elif
+   [ -z "$1" ]; then
+	selection="dmenu -l 10"
+fi
+
 # Detect active window and identify the browser
 xprop -root | grep '^_NET_ACTIVE_WINDOW' && {
     winid=$(xprop -root _NET_ACTIVE_WINDOW | sed 's/.*[[:space:]]//')
@@ -10,12 +17,13 @@ xprop -root | grep '^_NET_ACTIVE_WINDOW' && {
     case "$class" in
         firefox) nbrowser='firefox' ;;
         Brave-browser) nbrowser='brave' ;;
+ 	Chromium) nbrowser='chromium' ;;
         Thorium-browser) nbrowser='thorium-browser' ;;
         qutebrowser) nbrowser='qutebrowser' ;;
     esac
 }
 
-[ -n "$nbrowser" ] && browser_command="$nbrowser" #&& browser_command="$BROWSER"
+[ -n "$nbrowser" ] && browser_command="$nbrowser"
 
 # Search engine URL
 search_engine='https://priv.au/search?q='
@@ -24,12 +32,15 @@ search_engine='https://priv.au/search?q='
 bookmarks_file="$HOME/.config/bookmarks/browser"
 
 # Show dmenu prompt and get selected site
-selected_site=$(cat "$bookmarks_file" | dmenu -i -l 10 | awk '{print $1}')
+selected_site=$(cat "$bookmarks_file" | $selection | awk '{print $1}')
 
 if [ -n "$selected_site" ]; then
-	if  echo "$selected_site" | grep -qE '^(http|https)://'  ; then
-		$browser_command "$selected_site"
-	else
-		$browser_command "$search_engine$selected_site"
-	fi
+    if echo "$selected_site" | grep -qE '^(http|https)://'; then
+        $browser_command "$selected_site"
+    elif echo "$selected_site" | grep -qE \
+'\.(com|org|net|edu|gov|mil|int|co|us|uk|de|jp|fr|au|ca|cn|xyz|info|biz|ai|app|tech|site|online|store|io)$'; then
+        $browser_command "$selected_site"
+    else
+        $browser_command "$search_engine$selected_site"
+    fi
 fi
